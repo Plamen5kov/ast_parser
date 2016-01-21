@@ -61,4 +61,4 @@ var visitWith = function(ast, visitorsForEs5) {
 }
 
 
-readFile("app/t.js").then(astFromFileContent).then(visitAst);
+readFile("app/test.js").then(astFromFileContent).then(visitAst);
