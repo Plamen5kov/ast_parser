@@ -2,7 +2,7 @@ loggingSettings = {
 	"logDirectory" : "logs",
 	"strategy" : "console",
 	"APP_NAME" : "ast_parser",
-	"disable": false //TODO: take from environment variable
+	"disable": false // TODO: take from environment variable
 };
 // loggingSettings.level = 'info';
 
@@ -10,7 +10,7 @@ var fs = require("fs"),
 	babelParser = require("babylon"),
 	logger = require('./helpers/logger')(loggingSettings);
 
-//TODO: get from environment variable and leave this as default
+// TODO: get from environment variable and leave this as default
 var outFile = "out/ast.txt";
 
 var readFile = function (currentFilePath) {
@@ -63,7 +63,7 @@ var writeToFile = function(data, err) {
 	});
 }
 
-//TODO: implement and require from another file
+// TODO: implement and require from another file
 var visitorsPackage = {
 	"decoratorVisitor": function decoratorVisitor() {},
 	"extendVisitor": function extendVisitor() {},
@@ -78,7 +78,10 @@ var visitAst = function (data, err) {
 		}
 
 		logger.info("+visiting ast with given visitor library!");
-		visitWith(data, visitorsPackage);
+
+		// TODO: return visitor result and write to file
+		var visitResult = visitWith(data, visitorsPackage);
+		return resolve(visitResult);
 	});
 }
 
