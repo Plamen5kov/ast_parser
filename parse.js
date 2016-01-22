@@ -1,6 +1,8 @@
 var fs = require("fs"),
 	babelParser = require("babylon");
 
+var outFile = "out/ast.txt";
+
 var readFile = function (currentFilePath) {
 	return new Promise(function (resolve, reject) {
 		fs.readFile(currentFilePath, function (err, data) {
@@ -17,12 +19,13 @@ var readFile = function (currentFilePath) {
 	});
 }
 
-var astFromFileContent = function (success, err) {
+var astFromFileContent = function (data, err) {
 	return new Promise(function (resolve, reject) {
 
-		if(success) {
+		if(data) {
 			console.log("\t +parsing ast from file!");
-			var ast = babelParser.parse("var = 4");
+			var ast = babelParser.parse(data);
+			// var ast = babelParser.parse("var = 4"); //try if error handling works ok
 			resolve(ast);
 		}
 		if(err) {
@@ -33,6 +36,24 @@ var astFromFileContent = function (success, err) {
 	});
 };
 
+var writeToFile = function(data, err) {
+	return new Promise (function (resolve, reject) {
+	 	fs.writeFile(outFile, JSON.stringify(data), function (fileError) {
+
+			if(err) {
+				console.log("\t +DIDN'T write to file!");
+				reject(false);
+			}
+
+			if(fileError) {
+				reject(fileError);
+			}
+			console.log("\t +wrote to file: " + outFile);
+			resolve(data);
+		});
+	});
+}
+
 //todo: implement and require from another file
 var visitorsPackage = {
 	"decoratorVisitor": function decoratorVisitor() {},
@@ -40,18 +61,16 @@ var visitorsPackage = {
 	"classVisitor": function classVisitor() {}
 }
 
-var visitAst = function (success, err) {
+var visitAst = function (data, err) {
 	return new Promise (function (resolve, reject) {
-		if(success) {
+		if(data) {
 			console.log("\t +visiting ast with given visitor library!");
-			visitWith(success, visitorsPackage);
+			visitWith(data, visitorsPackage);
 		}
 		if(err) {
 			console.log("\t +DIDN'T visit ast!");
-			//todo: pass some kind of err
 			reject(false);
 		}
-
 	});
 }
 
@@ -59,7 +78,11 @@ var visitWith = function(ast, visitorsForEs5) {
 	console.log("\t +visiting happens here");
 }
 
+var exceptionHandler = function (reason) {
+	console.log("Caught error: " + reason);
+}
 
-readFile("app/test.js").then(astFromFileContent).then(visitAst).catch(function (reason) {
-	console.log(reason);
-})
+readFile("app/test.js").then(astFromFileContent)
+			.then(writeToFile) //fluent api for debugging purposes
+			.then(visitAst)
+			.catch(exceptionHandler)
