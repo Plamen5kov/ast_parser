@@ -22,7 +22,7 @@ var astFromFileContent = function (success, err) {
 
 		if(success) {
 			console.log("\t +parsing ast from file!");
-			var ast = babelParser.parse(success.toString());
+			var ast = babelParser.parse("var = 4");
 			resolve(ast);
 		}
 		if(err) {
@@ -34,7 +34,6 @@ var astFromFileContent = function (success, err) {
 };
 
 //todo: implement and require from another file
-
 var visitorsPackage = {
 	"decoratorVisitor": function decoratorVisitor() {},
 	"extendVisitor": function extendVisitor() {},
@@ -61,4 +60,6 @@ var visitWith = function(ast, visitorsForEs5) {
 }
 
 
-readFile("app/test.js").then(astFromFileContent).then(visitAst);
+readFile("app/test.js").then(astFromFileContent).then(visitAst).catch(function (reason) {
+	console.log(reason);
+})
