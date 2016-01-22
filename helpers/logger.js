@@ -1,5 +1,3 @@
-// modified npm module: log-client-node
-
 var fs = require('fs'),
 	path = require('path'),
 	os = require('os');
@@ -37,100 +35,57 @@ function canWrite(owner, inGroup, mode){
 
 function createLog(appName, logDirectory, setting){
 	
-	var appLog;
+	var appLog = {};
 	
     function getRequestId() {
         return (process.domain && process.domain.id) || "";
     }
 
-    /**
-     * get log Date. For example: 2014-09-09
-     * @returns {string}
-     */
     function getLogDate(){
         var today = new Date();
-        var month = "0"+(today.getMonth() + 1);
-        if(month.length>2){
-            month = month.substring(1,3);
-        }
-        var day = "0"+today.getDate();
-        if(day.length>2){
-            day = day.substring(1,3);
-        }
-        var logDate = today.getFullYear() + "-" + month + "-" + day;
+
+        var fullYear = today.getFullYear();
+        var month = today.getMonth();
+        var day = today.getDate();
+        var hours = today.getHours();
+        var minutes = today.getMinutes();
+        var seconds = today.getSeconds();
+
+        var logDate = fullYear + "-" + month + "-" + day + "/" + hours + ":" + minutes + ":" + seconds;
         return logDate;
     }
 
-    appLog = require('tracer')[setting.strategy]({
-        level:      setting.level,
-        format:     "timestamp:{{timestamp}}|$|line:{{line}}|$|{{title}}: {{message}}",
-        dateformat: "yyyy-mm-dd/HH:MM:ss",
-        preprocess: function(data) {
-            if (data) data.requestId = getRequestId();
-        },
-        transport:  function(data){
+    function setMessageWithFormat(message) {
+        var res = getLogDate() + "\t" + message;
+        return res;
+    }
 
-            if (data.title === 'error') {
-                console.error(data.output);
-            } else {
-                console.log(data.output);
+    function appendToLogFile(line) {
+        var logFile = logDirectory + path.sep + appName + ".log";
+        var augmentedLine = getLogDate() + "\t" + line + os.EOL
+        fs.appendFile(logFile, augmentedLine, function (err) {
+            if(err) {
+                throw "couldn't write to " + logFile; 
             }
+        });
+    }
+    
+    appLog.log = function (input) {
+		console.log(setMessageWithFormat(input));
+        appendToLogFile(input);
+	}
 
-            var logDate = getLogDate();
-            var appLogFile = path.join(logDirectory, logDate + "-" + appName + "-node.log");
-            fs.open(appLogFile, 'a', 0666, function(err, id){
-                if (!err){
-                    fs.write(id, data.output + "\n", null, 'utf8', function(){
-                        fs.close(id, function(){
-                        });
-                    });
-                } else {
-                    console.log('ERROR OPENING AND WRITING TO LOG FILE');
-                    console.log(err);
-                    fs.close(id, function(){
-                    });
-                }
-            });
-
-            var appClsLogFile = path.join(logDirectory, logDate + "-" + appName + "-node.log.temp");
-            fs.open(appClsLogFile, 'a', 0666, function(err, id){
-
-                var clslog = data.output.replace(/\n/g,'|#|');
-
-                if (!err){
-                    fs.write(id, clslog + "\n", null, 'utf8', function(){
-                        fs.close(id, function(){
-                        });
-                    });
-                } else {
-                    console.log('ERROR OPENING AND WRITING TO LOG FILE');
-                    console.log(err);
-                    fs.close(id, function(){
-                    });
-                }
-            });
-        }
-    });
-
-    appLog.newTransaction=function(transactionContext){
-        if(process.domain){
-            var now=new Date();
-            var startTime = now.getTime();
-            process.domain._startTime=startTime;
-            process.domain._transactionContext=transactionContext;
-        }else{
-            appLog.error('process.domain is null. Cannot use transaction feature!');
-        }
-
-    };
-    appLog.completeTransaction=function(){
-        if(process.domain && process.domain._startTime){
-            var now2=new Date();
-            var endTime = now2.getTime();
-            var duration = endTime-process.domain._startTime;
-            appLog.info('{transContext:'+JSON.stringify(process.domain._transactionContext)+','+'duration:'+duration+'}');
-        }
-    };
+    appLog.info = appLog.log;
+    	
+    appLog.warn = function (input) {
+		console.warn(setMessageWithFormat(input));
+        appendToLogFile(input);
+	}
+	
+    appLog.error = function (input) {
+		console.error(setMessageWithFormat(input));
+        appendToLogFile(input);
+	}
 
     return appLog;
 }
