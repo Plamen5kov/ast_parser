@@ -15,3 +15,11 @@ npm install
 * Open `parse.js` in Sublime Text 3
 * in Editor, select `Tools/BuildSystem/NodeJs`. You need to have [nodejs](https://nodejs.org/en/) installed. I'm using latest LTS(long term support) currently 4.2.5.
 * `Alt+R` to run nodejs in editor
+
+## More information:
+* babel: javasript transpiler
+* [babylon](https://github.com/babel/babel/tree/master/packages/babylon): babel javascript parser
+* [babel handbook](https://github.com/thejameskyle/babel-handbook/blob/master/translations/en/README.md)
+* learning from [plugin handbook](https://github.com/thejameskyle/babel-handbook/blob/master/translations/en/plugin-handbook.md)
+
+
