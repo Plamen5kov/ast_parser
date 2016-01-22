@@ -63,7 +63,7 @@ function createLog(appName, logDirectory, setting){
 
     appLog = require('tracer')[setting.strategy]({
         level:      setting.level,
-        format:     "timestamp:{{timestamp}}|$|line:{{line}}|$|message:\t{{message}}",
+        format:     "timestamp:{{timestamp}}|$|line:{{line}}|$|{{title}}: {{message}}",
         dateformat: "yyyy-mm-dd/HH:MM:ss",
         preprocess: function(data) {
             if (data) data.requestId = getRequestId();
