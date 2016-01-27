@@ -8,10 +8,30 @@ loggingSettings = {
 
 var fs = require("fs"),
 	babelParser = require("babylon"),
-	logger = require('./helpers/logger')(loggingSettings);
+	logger = require('./helpers/logger')(loggingSettings),
+	path = require("path"),
+	appDir = path.dirname(require.main.filename);
 
-// TODO: get from environment variable and leave this as default
-var outFile = "out/ast.txt";
+var outFile = "out/ast.txt"; //default out file
+
+if(process.env.AST_PARSER_OUT_FILE) {
+	outFile = process.env.AST_PARSER_OUT_FILE.trim();
+	if(ensureDirectories(outFile)) {
+		fs.writeFileSync(outFile, "");
+		logger.info("+created ast output file: " + path.join(appDir, outFile));
+	}
+}
+
+function ensureDirectories(filePath) {
+	var parentDir = path.dirname(filePath);
+	if(fs.existsSync(parentDir)) {
+		return true;
+	}
+
+	ensureDirectories(parentDir);
+	fs.mkdirSync(parentDir);
+	return true;
+}
 
 var readFile = function (currentFilePath) {
 	return new Promise(function (resolve, reject) {
