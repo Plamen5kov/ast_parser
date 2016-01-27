@@ -1,8 +1,13 @@
+var disableLogger = false;
+if(process.env.AST_PARSER_DISABLE_LOGGING.trim() === "true") {
+	disableLogger = true;
+}
+
 loggingSettings = {
 	"logDirectory" : "logs",
 	"strategy" : "console",
 	"APP_NAME" : "ast_parser",
-	"disable": false // TODO: take from environment variable
+	"disable": disableLogger
 };
 // loggingSettings.level = 'info';
 
