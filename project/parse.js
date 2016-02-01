@@ -16,11 +16,18 @@ var fs = require("fs"),
 	babelParser = require("babylon"),
 	traverse = require("babel-traverse"),
 	logger = require('./helpers/logger')(loggingSettings),
-	path = require("path"),
-	appDir = path.dirname(require.main.filename),
-	stringify = require("./helpers/json_extension");
+	path = require("path"),	
+	stringify = require("./helpers/json_extension"),
+	ns_visitors = require("./visitors/es6-visitors"),
 
-var outFile = "out/ast.txt"; //default out file
+	appDir = path.dirname(require.main.filename),
+	extendDecoratorName = "extendDecorator", // TODO: think about name
+	outFile = "out/ast.txt", //default out file
+	inputFile = "app/test_es6_syntax.js";
+
+if(process.argv[2] === "es5") {
+	inputFile =  "app/test_es5_syntax.js";
+}
 
 if(process.env.AST_PARSER_OUT_FILE) {
 	outFile = process.env.AST_PARSER_OUT_FILE.trim();
@@ -102,13 +109,6 @@ var writeToFile = function(data, err) {
 	});
 }
 
-// TODO: implement and require from another file
-var visitorsPackage = {
-	"decoratorVisitor": function decoratorVisitor() {},
-	"extendVisitor": function extendVisitor() {},
-	"classVisitor": function classVisitor() {}
-}
-
 var visitAst = function (data, err) {
 	return new Promise (function (resolve, reject) {
 		if(err) {
@@ -120,35 +120,25 @@ var visitAst = function (data, err) {
 
 		traverse.default(data, {
 			enter(path) {
-				// console.log("---------")
-				// console.log(path);
-				if(path.node.type === "Decorator" && path.parent.type === "ClassDeclaration") {
-					// console.log(path.node.parent.name + "." + path.node.name)
-					// console.log(path);
-					path.find(function (data) {
-						console.log(data);
-					});
-					// for(var item in path) {
-					// 	console.log(item)
-					// }
-				}
+				var decoratorConfig = {
+					logger: logger,
+					extendDecoratorName: extendDecoratorName
+				};
+				ns_visitors.decoratorVisitor(path, decoratorConfig);
 				return resolve(path)
 			}
 		})
 	});
 }
 
-var visitWith = function(ast, visitorsForEs5) {
-	logger.info("+visiting happens here");
-
-	// traverse.()
-}
-
 var exceptionHandler = function (reason) {
 	logger.error("Error: Exception Handler Caught: " + reason);
+	for(var reas in reason) {
+		console.log(reas)
+	}
 }
 
-readFile("app/test.js").then(astFromFileContent)
+readFile(inputFile).then(astFromFileContent)
 						.then(visitAst)
 						.then(writeToFile)
 						.catch(exceptionHandler)
