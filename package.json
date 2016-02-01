@@ -10,6 +10,7 @@
   "license": "ISC",
   "dependencies": {
     "babel-traverse": "^6.4.5",
+    "babel-types": "^6.4.5",
     "babylon": "^6.4.5"
   }
 }
