@@ -12,7 +12,7 @@ npm install
 
 ## Usage with Sublime Text 3
 
-* Open `parse.js` in Sublime Text 3
+* Open `project/parse.js` in Sublime Text 3
 * in Editor, select `Tools/BuildSystem/NodeJs`. You need to have [nodejs](https://nodejs.org/en/) installed. I'm using latest LTS(long term support) currently 4.2.5.
 * `Alt+R` to run nodejs in editor
 

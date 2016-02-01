@@ -1,5 +1,7 @@
+///////////////// config /////////////////
+
 var disableLogger = false;
-if(process.env.AST_PARSER_DISABLE_LOGGING.trim() === "true") {
+if(process.env.AST_PARSER_DISABLE_LOGGING && process.env.AST_PARSER_DISABLE_LOGGING.trim() === "true") {
 	disableLogger = true;
 }
 
@@ -9,18 +11,24 @@ loggingSettings = {
 	"APP_NAME" : "ast_parser",
 	"disable": disableLogger
 };
-// loggingSettings.level = 'info';
 
 var fs = require("fs"),
 	babelParser = require("babylon"),
+	traverse = require("babel-traverse"),
 	logger = require('./helpers/logger')(loggingSettings),
 	path = require("path"),
-	appDir = path.dirname(require.main.filename);
+	appDir = path.dirname(require.main.filename),
+	stringify = require("./helpers/json_extension");
 
 var outFile = "out/ast.txt"; //default out file
 
 if(process.env.AST_PARSER_OUT_FILE) {
 	outFile = process.env.AST_PARSER_OUT_FILE.trim();
+}
+
+/////////////// init ////////////////
+
+function createFile(filePath) {
 	if(ensureDirectories(outFile)) {
 		fs.writeFileSync(outFile, "");
 		logger.info("+created ast output file: " + path.join(appDir, outFile));
@@ -37,6 +45,9 @@ function ensureDirectories(filePath) {
 	fs.mkdirSync(parentDir);
 	return true;
 }
+
+
+/////////////// execute ////////////////
 
 var readFile = function (currentFilePath) {
 	return new Promise(function (resolve, reject) {
@@ -63,7 +74,9 @@ var astFromFileContent = function (data, err) {
 		}
 		
 		logger.info("+parsing ast from file!");
-		var ast = babelParser.parse(data);
+		var ast = babelParser.parse(data, {
+						plugins: ["decorators"]
+					});
 		// var ast = babelParser.parse("var = 4"); //try if error handling works ok
 		return resolve(ast);
 	});
@@ -71,7 +84,8 @@ var astFromFileContent = function (data, err) {
 
 var writeToFile = function(data, err) {
 	return new Promise (function (resolve, reject) {
-	 	fs.writeFile(outFile, JSON.stringify(data, null, 4), function (writeFileError) {
+	 	// fs.writeFile(outFile, JSON.stringify(data, null, 4), function (writeFileError) {
+	 	fs.writeFile(outFile, stringify(data), function (writeFileError) {
 
 			if(err) {
 				logger.warn("Error from writeToFile: " + err);
@@ -104,14 +118,30 @@ var visitAst = function (data, err) {
 
 		logger.info("+visiting ast with given visitor library!");
 
-		// TODO: return visitor result and write to file
-		var visitResult = visitWith(data, visitorsPackage);
-		return resolve(visitResult);
+		traverse.default(data, {
+			enter(path) {
+				// console.log("---------")
+				// console.log(path);
+				if(path.node.type === "Decorator" && path.parent.type === "ClassDeclaration") {
+					// console.log(path.node.parent.name + "." + path.node.name)
+					// console.log(path);
+					path.find(function (data) {
+						console.log(data);
+					});
+					// for(var item in path) {
+					// 	console.log(item)
+					// }
+				}
+				return resolve(path)
+			}
+		})
 	});
 }
 
 var visitWith = function(ast, visitorsForEs5) {
 	logger.info("+visiting happens here");
+
+	// traverse.()
 }
 
 var exceptionHandler = function (reason) {
@@ -119,6 +149,6 @@ var exceptionHandler = function (reason) {
 }
 
 readFile("app/test.js").then(astFromFileContent)
-						.then(writeToFile) //fluent api for debugging purposes
 						.then(visitAst)
+						.then(writeToFile)
 						.catch(exceptionHandler)

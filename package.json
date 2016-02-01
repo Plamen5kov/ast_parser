@@ -2,13 +2,14 @@
   "name": "static_analysis",
   "version": "1.0.0",
   "description": "",
-  "main": "parse.js",
+  "main": "project/parse.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "babel-traverse": "^6.4.5",
     "babylon": "^6.4.5"
   }
 }
