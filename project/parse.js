@@ -123,24 +123,30 @@ var visitAst = function (data, err) {
 		traverse.default(data, {
 			enter(path) {
 				var decoratorConfig = {
-					logger: logger,
+					// logger: logger,
 					extendDecoratorName: extendDecoratorName
 				};
-				// es6_visitors.decoratorVisitor(path, decoratorConfig);
-				es5_visitors.decoratorVisitor(path, decoratorConfig);
+					es6_visitors.decoratorVisitor(path, decoratorConfig);	
+					es5_visitors.decoratorVisitor(path, decoratorConfig);
 			}
 		})
 
-		var decoratorClassName = es6_visitors.decoratorVisitor.getDecoratorClassName();
-		var extendedMethodNames = es6_visitors.decoratorVisitor.getMethodNames();
-		console.log(decoratorClassName + " - " + extendedMethodNames);
-
-		//ES5 SYNTAX DONE (TODO: validations)
-		// var decoratorClassName = es5_visitors.decoratorVisitor.getDecoratorClassName();
-		// var extendedMethodNames = es5_visitors.decoratorVisitor.getMethodNames();
-		// var extendedClassNames = es5_visitors.decoratorVisitor.getExtendClass();
-
-		// logger.log("\nJava File: " + decoratorClassName + "\nExtend Class: " + extendedClassNames + "\nOverridden Methods: " + extendedMethodNames);
+		try {
+			logger.info("+trying to parse ES6 syntax!");
+			var decoratorClassName = es6_visitors.decoratorVisitor.getDecoratorClassName();
+			var extendedClassNames = es6_visitors.decoratorVisitor.getExtendClass();
+			var extendedMethodNames = es6_visitors.decoratorVisitor.getMethodNames();
+			logger.info("\nJava File: " + decoratorClassName + "\nExtend Class: " + extendedClassNames + "\nOverridden Methods: " + extendedMethodNames);
+		}
+		catch (e) {
+			logger.info("Error: " + e);
+			logger.info("+trying to parse ES5 syntax!");
+			var decoratorClassName = es5_visitors.decoratorVisitor.getDecoratorClassName(); // my.custom.Class
+			var extendedClassNames = es5_visitors.decoratorVisitor.getExtendClass(); // android.widget.Button
+			var extendedMethodNames = es5_visitors.decoratorVisitor.getMethodNames();  // onClick,onClick1
+			logger.info("\nJava File: " + decoratorClassName + "\nExtend Class: " + extendedClassNames + "\nOverridden Methods: " + extendedMethodNames);	
+		}
+		
 		return resolve(data);
 	});
 }
