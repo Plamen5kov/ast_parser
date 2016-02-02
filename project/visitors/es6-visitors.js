@@ -19,6 +19,11 @@ var es6_visitors = (function () {
 
 			// node is our custom class decorator (must be called with parameters)
 			if(t.isCallExpression(path.node.expression) && path.node.expression.callee.name === extendDecoratorName) {
+
+				if(config.logger) {
+					config.logger.info("\t+in extend decorator");
+				}
+
 				isExtendClassDecorator = true;
 
 				var decoratorArguments = path.node.expression.arguments;
@@ -47,6 +52,9 @@ var es6_visitors = (function () {
 
 		// get extending class
 		if(t.isClassDeclaration(path)) {
+			if(config.logger) {
+				config.logger.info("\t+in class declaration");
+			}
 			classDeclarationCount++;
 
 			if(classDeclarationCount > 1) {
@@ -71,11 +79,12 @@ var es6_visitors = (function () {
 
 		// get extended method names
 		if(t.isClassMethod(path)) {
-			overriddenMethodNames.push(path.node.key.name);
 
 			if(config.logger) {
-				config.logger.info(path.node.key.name);
+				config.logger.info("\t+in class method");
 			}
+
+			overriddenMethodNames.push(path.node.key.name);
 		}
 	}
 

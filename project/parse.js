@@ -25,11 +25,7 @@ var fs = require("fs"),
 	appDir = path.dirname(require.main.filename),
 	extendDecoratorName = "extendDecorator", // TODO: think about name
 	outFile = "out/ast.txt", //default out file
-	inputFile = "app/test_es5_syntax.js";
-
-if(process.argv[2] === "es5") {
-	inputFile =  "app/test_es5_syntax.js";
-}
+	inputFile = "app/test_es5-6_syntax.js";
 
 if(process.env.AST_PARSER_OUT_FILE) {
 	outFile = process.env.AST_PARSER_OUT_FILE.trim();

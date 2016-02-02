@@ -10,6 +10,11 @@ var es6_visitors = (function () {
 	function decoratorVisitor(path, config) {
 
 		if (t.isMemberExpression(path) && path.node.property.name === "extend") {
+
+			if(config.logger) {
+				config.logger.info("\t+in extend function");
+			}
+
 			isExtendKeyWord = true;
 
 			var callee = path.parent.callee;
