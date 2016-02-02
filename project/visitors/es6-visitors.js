@@ -17,7 +17,7 @@ var es6_visitors = (function () {
 			if(t.isCallExpression(path.node.expression) && path.node.expression.callee.name === extendDecoratorName) {
 				isExtendClassDecorator = true;
 				classNameFromDecorator = path.node.expression.arguments[0].extra.rawValue;
-				var isCorrectClassName = /^(((\w+\.){1,}\w+)|(\w+))$/.test(classNameFromDecorator);
+				var isCorrectClassName = /^(((\w+\.)+\w+)|(\w+))$/.test(classNameFromDecorator);
 
 				if(!isCorrectClassName) {
 					throw "The argument '" + classNameFromDecorator + "' of the '" + extendDecoratorName + "' decorator is not following the right pattern which is: '[namespace.]ClassName'. Example: 'a.b.ClassName'";

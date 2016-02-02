@@ -18,13 +18,14 @@ var fs = require("fs"),
 	logger = require('./helpers/logger')(loggingSettings),
 	path = require("path"),	
 	stringify = require("./helpers/json_extension"),
-	ns_visitors = require("./visitors/es6-visitors"),
+	es6_visitors = require("./visitors/es6-visitors"),
+	es5_visitors = require("./visitors/es5-visitors"),
 	t = require("babel-types"),
 
 	appDir = path.dirname(require.main.filename),
 	extendDecoratorName = "extendDecorator", // TODO: think about name
 	outFile = "out/ast.txt", //default out file
-	inputFile = "app/test_es6_syntax.js";
+	inputFile = "app/test_es5_syntax.js";
 
 if(process.argv[2] === "es5") {
 	inputFile =  "app/test_es5_syntax.js";
@@ -125,14 +126,21 @@ var visitAst = function (data, err) {
 					logger: logger,
 					extendDecoratorName: extendDecoratorName
 				};
-				ns_visitors.decoratorVisitor(path, decoratorConfig);
+				// es6_visitors.decoratorVisitor(path, decoratorConfig);
+				es5_visitors.decoratorVisitor(path, decoratorConfig);
 			}
 		})
 
-		var decoratorClassName = ns_visitors.decoratorVisitor.getDecoratorClassName();
-		var extendedMethodNames = ns_visitors.decoratorVisitor.getMethodNames();
-		// console.log(decoratorClassName + " - " + extendedMethodNames);
+		var decoratorClassName = es6_visitors.decoratorVisitor.getDecoratorClassName();
+		var extendedMethodNames = es6_visitors.decoratorVisitor.getMethodNames();
+		console.log(decoratorClassName + " - " + extendedMethodNames);
 
+		//ES5 SYNTAX DONE (TODO: validations)
+		// var decoratorClassName = es5_visitors.decoratorVisitor.getDecoratorClassName();
+		// var extendedMethodNames = es5_visitors.decoratorVisitor.getMethodNames();
+		// var extendedClassNames = es5_visitors.decoratorVisitor.getExtendClass();
+
+		// logger.log("\nJava File: " + decoratorClassName + "\nExtend Class: " + extendedClassNames + "\nOverridden Methods: " + extendedMethodNames);
 		return resolve(data);
 	});
 }
