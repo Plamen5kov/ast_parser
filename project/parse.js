@@ -19,6 +19,7 @@ var fs = require("fs"),
 	path = require("path"),	
 	stringify = require("./helpers/json_extension"),
 	ns_visitors = require("./visitors/es6-visitors"),
+	t = require("babel-types"),
 
 	appDir = path.dirname(require.main.filename),
 	extendDecoratorName = "extendDecorator", // TODO: think about name
@@ -117,7 +118,7 @@ var visitAst = function (data, err) {
 		}
 
 		logger.info("+visiting ast with given visitor library!");
-
+		
 		traverse.default(data, {
 			enter(path) {
 				var decoratorConfig = {
@@ -125,9 +126,14 @@ var visitAst = function (data, err) {
 					extendDecoratorName: extendDecoratorName
 				};
 				ns_visitors.decoratorVisitor(path, decoratorConfig);
-				return resolve(path)
 			}
 		})
+
+		var decoratorClassName = ns_visitors.decoratorVisitor.getDecoratorClassName();
+		var extendedMethodNames = ns_visitors.decoratorVisitor.getMethodNames();
+		// console.log(decoratorClassName + " - " + extendedMethodNames);
+
+		return resolve(data);
 	});
 }
 

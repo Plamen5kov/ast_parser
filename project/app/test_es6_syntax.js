@@ -1,11 +1,20 @@
 @extendDecorator("a.b.C")
-class A{
+class A {
+	
+	constructor(constructorParameter) {
+	}
+	  
 	classFunc() {
-		var a = android.widget.Button.extend({
-			onClick: function () {
-				console.log('click happened');
-			}
-		});	
+		// var a = android.widget.Button.extend({
+			// onClick: function () {
+				// console.log('click happened');
+			// }
+		// });	
 	}
 	
+	methodSimple() {
+	}
+	
+	methodWithParameters(paramOne) {
+	}
 }
