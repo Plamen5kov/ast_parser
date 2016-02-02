@@ -16,14 +16,19 @@ var es6_visitors = (function () {
 			// node is our custom class decorator (must be called with parameters)
 			if(t.isCallExpression(path.node.expression) && path.node.expression.callee.name === extendDecoratorName) {
 				isExtendClassDecorator = true;
-				// TODO: think about throwing error if user doesn't follow documented decorator name convention
-				// example: 	@extendDecorator("a.b.C") right
-				// 		@extendDecorator("a / b / C") wrong
 				classNameFromDecorator = path.node.expression.arguments[0].extra.rawValue;
+				var isCorrectClassName = /^(((\w+\.){1,}\w+)|(\w+))$/.test(classNameFromDecorator);
 
+				if(!isCorrectClassName) {
+					throw "The argument '" + classNameFromDecorator + "' of the '" + extendDecoratorName + "' decorator is not following the right pattern which is: '[namespace.]ClassName'. Example: 'a.b.ClassName'";
+				}
 				if(config.logger) {
 					config.logger.info(classNameFromDecorator);
 				}
+			}
+
+			if(!isExtendClassDecorator) {
+				throw "The node you are trying to parse has no class decorator: '" + extendDecoratorName + "', which is required. Example: '" + extendDecoratorName + "(\"a.b.ClassName\")'";
 			}
 		}
 

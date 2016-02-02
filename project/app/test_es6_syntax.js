@@ -1,4 +1,4 @@
-@extendDecorator("a.b.C")
+@extendDecorator("asd.asd.asd")
 class A {
 	
 	constructor(constructorParameter) {

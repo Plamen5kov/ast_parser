@@ -68,7 +68,7 @@ var readFile = function (currentFilePath) {
 			}
 
 			logger.info("+got content of file!");
-			return resolve(data.toString());	
+			return resolve(data.toString());
 		});
 	});
 }
@@ -118,7 +118,7 @@ var visitAst = function (data, err) {
 		}
 
 		logger.info("+visiting ast with given visitor library!");
-		
+
 		traverse.default(data, {
 			enter(path) {
 				var decoratorConfig = {
@@ -139,9 +139,6 @@ var visitAst = function (data, err) {
 
 var exceptionHandler = function (reason) {
 	logger.error("Error: Exception Handler Caught: " + reason);
-	for(var reas in reason) {
-		console.log(reas)
-	}
 }
 
 readFile(inputFile).then(astFromFileContent)
