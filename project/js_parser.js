@@ -26,8 +26,8 @@ var fs = require("fs"),
 	appDir = path.dirname(require.main.filename),
 	extendDecoratorName = "extendDecorator", // TODO: think about name
 	outFile = "out/extended_classes.txt", //default out file
-	inputFile = "app/test_es5-6_syntax.js",
-	inputDir = "app"
+	inputDir = "input_javascript",
+	inputFile = path.join(inputDir, "/test_es5-6_syntax.js");
 
 if(process.env.AST_PARSER_OUT_FILE) {
 	outFile = process.env.AST_PARSER_OUT_FILE.trim();
