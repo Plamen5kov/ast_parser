@@ -11,7 +11,28 @@ function cleanOutFile(filePath) {
 	fs.truncateSync(filePath, 0);
 	console.log("+cleared out file: " + filePath);
 }
-cleanOutFile(outFile);
+
+function createFile(filePath) {
+	if(ensureDirectories(outFile)) {
+		fs.writeFileSync(outFile, "");
+		console.log("+created ast output file: " + outFile);
+	}
+	cleanOutFile(filePath)
+}
+
+function ensureDirectories(filePath) {
+	var parentDir = path.dirname(filePath);
+	if(fs.existsSync(parentDir)) {
+		return true;
+	}
+
+	ensureDirectories(parentDir);
+	fs.mkdirSync(parentDir);
+	return true;
+}
+
+createFile(outFile)
+
 
 var traverseFilesDir = function(filesDir) {
 	if(!fs.existsSync(filesDir)) {
