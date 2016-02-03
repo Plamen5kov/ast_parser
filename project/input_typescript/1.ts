@@ -1,4 +1,4 @@
-@myDecorator("MY_DECORATOR")
+@myClassDecorator("MY_DECORATOR1111")
 class MyClass {
 
 	@methodDecorator("METHOD_DECORATOR")

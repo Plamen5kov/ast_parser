@@ -4,7 +4,14 @@ var ts = require("typescript"),
 	filewalker = require("filewalker"),
 
 	inputDir = "input_typescript",
-	outFile = "out/typescript_out.txt"
+	outFile = "out/typescript_out.txt",
+	classDecoratorName = "myClassDecorator"
+
+function cleanOutFile(filePath) {
+	fs.truncateSync(filePath, 0);
+	console.log("+cleared out file: " + filePath);
+}
+cleanOutFile(outFile);
 
 var traverseFilesDir = function(filesDir) {
 	if(!fs.existsSync(filesDir)) {
@@ -17,91 +24,59 @@ var traverseFilesDir = function(filesDir) {
 			if(file.substring(file.length - 3, file.length) === '.ts') {
 				var currentFileName = path.join(filesDir, file);
 				allTsFiles.push(currentFileName);
+				parseSingleFile(currentFileName)
+					.then(traverseSourceFile)
+					.then(writeToFile)
+					.catch(exceptionHandler);
 			}
 		})
 		.on('error', function(err) {
 			reject(err);
-		})
-		.on("done", function () { 
-			getProgram(inputDir, allTsFiles)
-				.then(getAllClasses)
-				.then(writeToFile)
-				.catch(exceptionHandler);
 		})
 		.walk();
 }
 
 traverseFilesDir(inputDir);
 
-var getProgram =  function (root, files) {
+var parseSingleFile = function(currentFile) {
 	return new Promise(function (resolve, reject) {
-		try {
-			var _program = buildLanguageService(root, files).getProgram();
-			return resolve(_program);
-		}
-		catch(e) {
-			return reject(e);
-		}
-	}) ;
+		var fileContent = fs.readFileSync(currentFile).toString();
+		var sourceFile = ts.createSourceFile("a.ts", fileContent, ts.ScriptTarget.ES6, /*setParentNodes */ false);
+		resolve(sourceFile);
+	});
 }
 
-var buildLanguageService = function (root, allFiles) {
-
-	var options = {
-		module: ts.ModuleKind.CommonJS 
-	};
-
-	var serviceHost = {
-		getScriptFileNames: function() {
-			return allFiles;
-		}, 
-		getScriptVersion: function(fileName) {
-			return "1"
-		},
-		getScriptSnapshot: function (filePath) {
-			if (!fs.existsSync(filePath)) {
-				throw "File :'" + filePath + "' does not exist!" ;
-			}
-			var fileContent = fs.readFileSync(filePath).toString();
-			return ts.ScriptSnapshot.fromString(fileContent);
-		},
-		getCompilationSettings: function() { 
-			return options
-		},
-		getCurrentDirectory: function() {
-			return root
-		},
-		getDefaultLibFileName: function(options) {
-			return ts.getDefaultLibFilePath(options)
-		}
-	};
-
-	return ts.createLanguageService(serviceHost, ts.createDocumentRegistry());
-}
-
-var getAllClasses = function (program, err) {
+var traverseSourceFile = function(data, err) {
 	return new Promise(function (resolve, reject) {
-		var allClasses= [];
-
-		program.getSourceFiles().forEach(function callBack(tsSource) {
-			var fill = function (node) {
+			var foundClassDecorator = false;
+			function fill(node) {
 
 				if (node.kind === ts.SyntaxKind.Decorator) {
-					console.log(node.end);
-					// return resolve(node.end);
+					if(node.expression && node.expression.expression) {
+						if(node.expression.arguments.length === 0) {
+							throw "There are no arguments in the decorator"
+						}
+						if(node.expression.expression.text === classDecoratorName) {
+							resolve(node.expression.arguments[0].text);
+						}
+						else {
+							throw "There is no '" + classDecoratorName + "' decorator in the file"
+						}
+					}
 				}
 				ts.forEachChild(node, fill);
 			}
-			fill(tsSource);
-		});
+			fill(data);
 
-		// return resolve(allClasses);
+			if(!foundClassDecorator) {
+				throw "Didn't find class decorator: '" + classDecoratorName + "'. Example: '@myClassDecorator(\"a.b.C\")'"
+			}
 	})
 }
 
 var writeToFile = function(data, err) {
 	return new Promise (function (resolve, reject) {
-
+		console.log("data: " + data)
 		fs.appendFile(outFile, data + '\n', function (writeFileError) {
 			if(err) {
 				return reject(err);
