@@ -62,6 +62,13 @@ var es6_visitors = (function () {
 		}
 	}
 
+	decoratorVisitor.clearData = function() {
+		defaultExtendDecoratorName = "extendDecorator",
+		isExtendKeyWord = false,
+		overriddenMethodNames = [],
+		extendClass = [],
+		classNameFromDecorator = "No decorator name found";
+	}
 	decoratorVisitor.getDecoratorClassName = function () {
 		if(!isExtendKeyWord) {
 			// TODO: specify file

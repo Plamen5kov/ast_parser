@@ -88,6 +88,16 @@ var es6_visitors = (function () {
 		}
 	}
 
+	decoratorVisitor.clearData = function() {
+		defaultExtendDecoratorName = "extendDecorator",
+		isExtendClassDecorator = false,
+		isClassDeclaration = false,
+		isClassDecorator = false;
+		overriddenMethodNames = [],
+		extendClass = [],
+		classNameFromDecorator = "No decorator name found",
+		classDeclarationCount = 0;
+	}
 	decoratorVisitor.getDecoratorClassName = function () {
 
 		if(!isClassDecorator) {
