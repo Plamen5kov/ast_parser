@@ -2,10 +2,12 @@ var ts = require("typescript"),
 	fs = require("fs"),
 	path = require("path"),
 	filewalker = require("filewalker"),
+	stringify = require("./helpers/json_extension"),
+
 
 	inputDir = "input_typescript",
 	outFile = "out/typescript_out.txt",
-	classDecoratorName = "myClassDecorator"
+	classDecoratorName = "JavaProxy"
 
 function cleanOutFile(filePath) {
 	fs.truncateSync(filePath, 0);
@@ -62,47 +64,93 @@ traverseFilesDir(inputDir);
 var parseSingleFile = function(currentFile) {
 	return new Promise(function (resolve, reject) {
 		var fileContent = fs.readFileSync(currentFile).toString();
-		var sourceFile = ts.createSourceFile("a.ts", fileContent, ts.ScriptTarget.ES6, /*setParentNodes */ false);
+		var sourceFile = ts.createSourceFile("a.ts", fileContent, ts.ScriptTarget.ES5, /*setParentNodes */ true);
 		resolve(sourceFile);
 	});
 }
 
 var traverseSourceFile = function(data, err) {
 	return new Promise(function (resolve, reject) {
-			var foundClassDecorator = false;
-			function fill(node) {
+			var foundClassDecorator = false,
+				classNameFromDecorator = "no decorator name found";
+				extendedClassNameArr = [],
+				classDeclarationCount = 0;
 
+			function fill(node) {
+				// resolve(stringify(node))
+
+				// get custom class decorator
 				if (node.kind === ts.SyntaxKind.Decorator) {
 					if(node.expression && node.expression.expression) {
 						if(node.expression.arguments.length === 0) {
 							throw "There are no arguments in the decorator"
 						}
 						if(node.expression.expression.text === classDecoratorName) {
-							resolve(node.expression.arguments[0].text);
+							foundClassDecorator = true;
+							var tempName = node.expression.arguments[0].text;
+							var isCorrectClassName = /^(((\w+\.)+\w+)|(\w+))$/.test(tempName);
+							if(!isCorrectClassName) {
+								throw "The argument '" + tempName + "' of the '" + classDecoratorName + "' decorator is not following the right pattern which is: '[namespace.]ClassName'. Example: 'a.b.ClassName'";
+							}
+							classNameFromDecorator = tempName;
+							// resolve(classNameFromDecorator);
+
 						}
 						else {
 							throw "There is no '" + classDecoratorName + "' decorator in the file"
 						}
 					}
 				}
+
+				if(node.kind === ts.SyntaxKind.ClassDeclaration) {
+					classDeclarationCount ++;
+					if(classDeclarationCount > 1) {
+						throw "There is more than one class declaration in one file!" //TODO: specify file!
+					}
+					if(node.heritageClauses && node.heritageClauses[0] && node.heritageClauses[0].types && node.heritageClauses[0].types[0]) {
+						var currentNode = node.heritageClauses[0].types[0];
+
+						while(true) {
+							if(currentNode && currentNode.text) {
+								extendedClassNameArr.push(currentNode.text)
+								break;
+							}
+
+							if(currentNode && currentNode.expression && currentNode.expression.name) {
+								var currentProp = currentNode.expression.name.text;
+								extendedClassNameArr.push(currentProp)
+							}
+							
+							currentNode = currentNode.expression;
+						}
+					}
+				}
+
 				ts.forEachChild(node, fill);
 			}
 			fill(data);
 
 			if(!foundClassDecorator) {
-				throw "Didn't find class decorator: '" + classDecoratorName + "'. Example: '@myClassDecorator(\"a.b.C\")'"
+				throw "Did not find class decorator: '" + classDecoratorName + "'. Example: '@" + classDecoratorName + "(\"a.b.C\")'"
 			}
+
+			var decoratorClassArgument = classNameFromDecorator;
+			var extendedClassNames = extendedClassNameArr.reverse().join(".");
+			var extendedMethodNames = "not yet";
+			var lineToWrite = "Java File: " + decoratorClassArgument + " - Extend Class: " + extendedClassNames + " - Overridden Methods: " + extendedMethodNames;
+			console.log(lineToWrite)
+			// resolve(lineToWrite);
 	})
 }
 
 var writeToFile = function(data, err) {
 	return new Promise (function (resolve, reject) {
-		console.log("data: " + data)
+		// console.log("data: " + data)
 		fs.appendFile(outFile, data + '\n', function (writeFileError) {
 			if(err) {
 				return reject(err);
 			}
-			if(writeFileError) {				
+			if(writeFileError) {
 				return reject(writeFileError);
 			}
 
