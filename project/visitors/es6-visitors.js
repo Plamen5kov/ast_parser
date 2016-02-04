@@ -11,11 +11,13 @@ var es6_visitors = (function () {
 		classDeclarationCount = 0;
 
 	function decoratorVisitor(path, config) {
+		classDeclarationCount = 0;
 		extendDecoratorName = config.extendDecoratorName ? config.extendDecoratorName: defaultExtendDecoratorName;
-		
+
 		// get extend class name from decorator
 		if(t.isDecorator(path.node) && t.isClassDeclaration(path.parent)) {
 			isClassDecorator = true;
+			
 			// node is our custom class decorator (must be called with parameters)
 			if(t.isCallExpression(path.node.expression) && path.node.expression.callee.name === extendDecoratorName) {
 
@@ -83,14 +85,18 @@ var es6_visitors = (function () {
 		}
 	}
 
-	decoratorVisitor.clearData = function() {
+	function clearDataInner() {
 		isExtendClassDecorator = false;
 		isClassDeclaration = false;
 		isClassDecorator = false;
 		overriddenMethodNames = [];
 		extendClass = [];
 		classNameFromDecorator = "No decorator name found";
-		classDeclarationCount = 0;
+		classDeclarationCount = 0;		
+	}
+
+	decoratorVisitor.clearData = function() {
+		clearDataInner();
 	}
 	decoratorVisitor.getDecoratorClassName = function () {
 		if(!isExtendClassDecorator) {
