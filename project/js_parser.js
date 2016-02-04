@@ -24,7 +24,7 @@ var fs = require("fs"),
 	filewalker = require('filewalker'), 
 
 	appDir = path.dirname(require.main.filename),
-	extendDecoratorName = "extendDecorator", // TODO: think about name
+	extendDecoratorName = "JavaProxy", // TODO: think about name
 	outFile = "out/extended_classes.txt", //default out file
 	inputDir = "input_javascript",
 	inputFile = path.join(inputDir, "/test_es5-6_syntax.js");
@@ -151,19 +151,19 @@ var visitAst = function (data, err) {
 			var extendedMethodNames = es6_visitors.decoratorVisitor.getMethodNames();
 			var lineToWrite = "Java File: " + decoratorClassName + " - Extend Class: " + extendedClassNames + " - Overridden Methods: " + extendedMethodNames;
 			es6_visitors.decoratorVisitor.clearData();
-			logger.info("\nJava File: " + decoratorClassName + "\nExtend Class: " + extendedClassNames + "\nOverridden Methods: " + extendedMethodNames);
+			logger.info(lineToWrite);
 			return resolve(lineToWrite);
 		}
 		catch (e) {
-			logger.info("Error: " + e);
+			logger.info("==Error: " + e);
 			logger.info("+trying to parse ES5 syntax!");
 			var decoratorClassName = es5_visitors.decoratorVisitor.getDecoratorClassName(); // my.custom.Class
 			var extendedClassNames = es5_visitors.decoratorVisitor.getExtendClass(); // android.widget.Button
 			var extendedMethodNames = es5_visitors.decoratorVisitor.getMethodNames();  // onClick,onClick1
 			var lineToWrite = "Java File: " + decoratorClassName + " - Extend Class: " + extendedClassNames + " - Overridden Methods: " + extendedMethodNames;
+			logger.info(lineToWrite);
 			es5_visitors.decoratorVisitor.clearData();
 			return resolve(lineToWrite);
-			logger.info("\nJava File: " + decoratorClassName + "\nExtend Class: " + extendedClassNames + "\nOverridden Methods: " + extendedMethodNames);	
 		}
 		return resolve(data);
 	});
@@ -190,5 +190,5 @@ var writeToFile = function(data, err) {
 }
 
 var exceptionHandler = function (reason) {
-	logger.error("Error: Exception Handler Caught: " + reason);
+	logger.error("(*)(*)(*)Error: Exception Handler Caught: " + reason);
 }

@@ -1,10 +1,10 @@
 var es6_visitors = (function () {
 	var t = require("babel-types"),
 
-		defaultExtendDecoratorName = "extendDecorator",
+		defaultExtendDecoratorName = "JavaProxy",
 		isExtendClassDecorator = false,
 		isClassDeclaration = false,
-		isClassDecorator = false;
+		isClassDecorator = false,
 		overriddenMethodNames = [],
 		extendClass = [],
 		classNameFromDecorator = "No decorator name found",
@@ -16,7 +16,6 @@ var es6_visitors = (function () {
 		// get extend class name from decorator
 		if(t.isDecorator(path.node) && t.isClassDeclaration(path.parent)) {
 			isClassDecorator = true;
-
 			// node is our custom class decorator (must be called with parameters)
 			if(t.isCallExpression(path.node.expression) && path.node.expression.callee.name === extendDecoratorName) {
 
@@ -36,17 +35,13 @@ var es6_visitors = (function () {
 					classNameFromDecorator = arg0.value;
 				}
 				else {
-					throw "The extend you are trying to make needs to have a string as a first parameter. Example: '...extend(\"a.b.C\", {...overrides...})'"
+					throw "The decorator: '" + extendDecoratorName + "' needs to have a string as a first parameter. Example: '" + extendDecoratorName + "(\"a.b.C\")'"
 				}
 
 				var isCorrectClassName = /^(((\w+\.)+\w+)|(\w+))$/.test(classNameFromDecorator);
 				if(!isCorrectClassName) {
 					throw "The argument '" + classNameFromDecorator + "' of the '" + extendDecoratorName + "' decorator is not following the right pattern which is: '[namespace.]ClassName'. Example: 'a.b.ClassName'";
 				}
-			}
-
-			if(!isExtendClassDecorator) {
-				throw "The node you are trying to parse has no class decorator: '" + extendDecoratorName + "', which is required. Example: '" + extendDecoratorName + "(\"a.b.ClassName\")'";
 			}
 		}
 
@@ -89,18 +84,16 @@ var es6_visitors = (function () {
 	}
 
 	decoratorVisitor.clearData = function() {
-		defaultExtendDecoratorName = "extendDecorator",
-		isExtendClassDecorator = false,
-		isClassDeclaration = false,
+		isExtendClassDecorator = false;
+		isClassDeclaration = false;
 		isClassDecorator = false;
-		overriddenMethodNames = [],
-		extendClass = [],
-		classNameFromDecorator = "No decorator name found",
+		overriddenMethodNames = [];
+		extendClass = [];
+		classNameFromDecorator = "No decorator name found";
 		classDeclarationCount = 0;
 	}
 	decoratorVisitor.getDecoratorClassName = function () {
-
-		if(!isClassDecorator) {
+		if(!isExtendClassDecorator) {
 			throw "The node you are trying to parse has no class decorator: '" + extendDecoratorName + "', which is required. Example: '" + extendDecoratorName + "(\"a.b.ClassName\")'";
 		}
 		
