@@ -1,4 +1,4 @@
-@extendDecorator("my.custom.ClassFrom")
+@JavaProxy("my.custom.ClassFrom")
 class SomeRandomClass extends android.app.Activity {
 	
 	constructor(constructorParameter) {
