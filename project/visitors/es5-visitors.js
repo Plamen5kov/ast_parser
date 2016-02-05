@@ -16,10 +16,13 @@ var es6_visitors = (function () {
 			}
 
 			isExtendKeyWord = true;
-
 			var callee = path.parent.callee;
 			if(!callee) {
-				throw "You need to specify a name of the 'extend'. Example: '...extend(\"a.b.C\", {...overrides...})')";
+				throw {
+					// TODO: specify file
+					message: "You need to specify a name of the 'extend'. Example: '...extend(\"a.b.C\", {...overrides...})')",
+					errCode: 1
+				}
 			}
 
 			var o = callee.object
@@ -40,12 +43,20 @@ var es6_visitors = (function () {
 				classNameFromDecorator = arg0.value;
 			}
 			else {
-				throw "The 'extend' you are trying to make needs to have a string as a first parameter. Example: '...extend(\"a.b.C\", {...overrides...})'"
+				throw {
+					// TODO: specify file
+					message: "The 'extend' you are trying to make needs to have a string as a first parameter. Example: '...extend(\"a.b.C\", {...overrides...})'",
+					errCode: 1
+				}
 			}
 
 			var isCorrectClassName = /^(((\w+\.)+\w+)|(\w+))$/.test(classNameFromDecorator);
 			if(!isCorrectClassName) {
-				throw "The first argument '" + classNameFromDecorator + "' of the 'extend' function is not following the right pattern which is: '[namespace.]ClassName'. Example: '...extend(\"a.b.ClassName\", {overrides...})'";
+				throw {
+					// TODO: specify file
+					message: "The first argument '" + classNameFromDecorator + "' of the 'extend' function is not following the right pattern which is: '[namespace.]ClassName'. Example: '...extend(\"a.b.ClassName\", {overrides...})'",
+					errCode: 1
+				}
 			}
 
 			var arg1 = path.parent.arguments[1];
@@ -57,16 +68,19 @@ var es6_visitors = (function () {
 				}
 			}
 			else {
-				throw "The extend you are trying to make needs to have an object as a second parameter. Example: '...extend(\"a.b.C\", {...overrides...})'"
+				throw {
+					// TODO: specify file
+					message: "The extend you are trying to make needs to have an object as a second parameter. Example: '...extend(\"a.b.C\", {...overrides...})'",
+					errCode: 1
+				}
 			}
 		}
 	}
 
 	decoratorVisitor.clearData = function() {
-		defaultExtendDecoratorName = "extendDecorator",
-		isExtendKeyWord = false,
-		overriddenMethodNames = [],
-		extendClass = [],
+		isExtendKeyWord = false;
+		overriddenMethodNames = [];
+		extendClass = [];
 		classNameFromDecorator = "No decorator name found";
 	}
 	decoratorVisitor.getDecoratorClassName = function () {
