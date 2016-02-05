@@ -190,5 +190,11 @@ var writeToFile = function(data, err) {
 }
 
 var exceptionHandler = function (reason) {
-	logger.error("(*)(*)(*)Error: Exception Handler Caught: " + reason);
+	if(reason.errCode && reason.errCode === 1) {
+		logger.error("(*)(*)(*)Error: Exception Handler Caught: " + reason.message);
+		process.exit(4);
+	}
+	else {
+		logger.error("(*)(*)(*)Error: Exception Handler Caught: " + reason);
+	}
 }
