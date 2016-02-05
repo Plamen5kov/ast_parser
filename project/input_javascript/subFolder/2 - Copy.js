@@ -1,4 +1,4 @@
-@JavaProxy("my.custom.ClassFromINNNNNCOPYY")
+@JavaProxy("my.custom.ClassFromINNNNNCOPY")
 class SomeRandomClass extends android.app.ActivityINNNN {
 	
 	constructorINNN(constructorParameter) {

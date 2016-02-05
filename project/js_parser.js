@@ -192,6 +192,7 @@ var writeToFile = function(data, err) {
 var exceptionHandler = function (reason) {
 	if(reason.errCode && reason.errCode === 1) {
 		logger.error("(*)(*)(*)Error: Exception Handler Caught: " + reason.message);
+		logger.error("PROCESS EXITING...");
 		process.exit(4);
 	}
 	else {
