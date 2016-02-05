@@ -71,8 +71,11 @@ var es6_visitors = (function () {
 	}
 	decoratorVisitor.getDecoratorClassName = function () {
 		if(!isExtendKeyWord) {
-			// TODO: specify file
-			throw "There is no 'extend' keyword used in this file! You need to extend a native class! Example: 'some.android.Class.extend(\"my.java.Class\", {overrides...})'";
+			throw {
+				// TODO: specify file
+				message: "There is no 'extend' keyword used in this file! You need to extend a native class! Example: 'some.android.Class.extend(\"my.java.Class\", {overrides...})'",
+				errCode: 1
+			}
 		}
 		return classNameFromDecorator;
 	}
