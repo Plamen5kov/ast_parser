@@ -11,16 +11,16 @@
 // We are using the exports object for the common events since we merge the appModule with this module's exports, which is what users will receive when require("application") is called;
 // TODO: This is kind of hacky and is "pure JS in TypeScript"
 
-@JavaProxy("com.tns.NativeScriptApplication")
-class NativeScriptApplication extends android.app.Application {
-    public onCreate(): void {
+@JavaProxy("com.tns.NativeScriptApplication11111")
+class NativeScriptApplication extends android.app.Application1111111111 {
+    public onCreate1111(): void {
         exports.android.init(this);
     }
-     public onCreate1(p: Number): Number {
+     public onCreate11111111(p: Number): Number {
         // exports.android.init(this);
         return p;
     }
-     public onCreate2(p: String): String {
+     public onCreate1111111(p: String): String {
         // exports.android.init(this);
         return p;
     }

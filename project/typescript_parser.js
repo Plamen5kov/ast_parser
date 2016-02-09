@@ -41,12 +41,10 @@ var traverseFilesDir = function(filesDir) {
 		throw "The input dir: " + filesDir + " does not exist!";
 	}
 
-	var allTsFiles = [];
 	filewalker(filesDir)
 		.on("file", function (file, info) {
 			if(file.substring(file.length - 3, file.length) === '.ts') {
 				var currentFileName = path.join(filesDir, file);
-				allTsFiles.push(currentFileName);
 				parseSingleFile(currentFileName)
 					.then(traverseSourceFile)
 					.then(writeToFile)
@@ -74,34 +72,44 @@ var traverseSourceFile = function(data, err) {
 			var foundClassDecorator = false,
 				classNameFromDecorator = "no decorator name found";
 				extendedClassNameArr = [],
+				overriddenMethodNames = [],
 				classDeclarationCount = 0;
 
-			function fill(node) {
-				// resolve(stringify(node))
-
-				// get custom class decorator
+				// return resolve(data);
+			function visit(node) {
+				// get decorator class argument
 				if (node.kind === ts.SyntaxKind.Decorator) {
 					if(node.expression && node.expression.expression) {
 						if(node.expression.arguments.length === 0) {
-							throw "There are no arguments in the decorator"
+							throw {
+								message: "There are no arguments in the decorator",
+								errCode: 1
+							}
 						}
 						if(node.expression.expression.text === classDecoratorName) {
 							foundClassDecorator = true;
 							var tempName = node.expression.arguments[0].text;
 							var isCorrectClassName = /^(((\w+\.)+\w+)|(\w+))$/.test(tempName);
 							if(!isCorrectClassName) {
-								throw "The argument '" + tempName + "' of the '" + classDecoratorName + "' decorator is not following the right pattern which is: '[namespace.]ClassName'. Example: 'a.b.ClassName'";
+								throw {
+									message: "The argument '" + tempName + "' of the '" + classDecoratorName + "' decorator is not following the right pattern which is: '[namespace.]ClassName'. Example: 'a.b.ClassName'",
+									errCode: 1
+								}
 							}
 							classNameFromDecorator = tempName;
 							// resolve(classNameFromDecorator);
 
 						}
 						else {
-							throw "There is no '" + classDecoratorName + "' decorator in the file"
+							throw{
+								message: "There is no '" + classDecoratorName + "' decorator in the file",
+								errCode: 1
+							}
 						}
 					}
 				}
 
+				// get extend class name
 				if(node.kind === ts.SyntaxKind.ClassDeclaration) {
 					classDeclarationCount ++;
 					if(classDeclarationCount > 1) {
@@ -124,11 +132,18 @@ var traverseSourceFile = function(data, err) {
 							currentNode = currentNode.expression;
 						}
 					}
+
+					var members = node.members;
+					for(var i in members) {
+						if(members[i].kind === ts.SyntaxKind.MethodDeclaration) {
+							overriddenMethodNames.push(members[i].name.text)
+						}
+					}
 				}
 
-				ts.forEachChild(node, fill);
+				ts.forEachChild(node, visit);
 			}
-			fill(data);
+			visit(data);
 
 			if(!foundClassDecorator) {
 				throw "Did not find class decorator: '" + classDecoratorName + "'. Example: '@" + classDecoratorName + "(\"a.b.C\")'"
@@ -136,19 +151,19 @@ var traverseSourceFile = function(data, err) {
 
 			var decoratorClassArgument = classNameFromDecorator;
 			var extendedClassNames = extendedClassNameArr.reverse().join(".");
-			var extendedMethodNames = "not yet";
+			var extendedMethodNames = overriddenMethodNames.join(",");
 			var lineToWrite = "Java File: " + decoratorClassArgument + " - Extend Class: " + extendedClassNames + " - Overridden Methods: " + extendedMethodNames;
 			console.log(lineToWrite)
-			// resolve(lineToWrite);
+			resolve(lineToWrite);
 	})
 }
 
 var writeToFile = function(data, err) {
 	return new Promise (function (resolve, reject) {
 		// console.log("data: " + data)
-		fs.appendFile(outFile, data + '\n', function (writeFileError) {
+		fs.appendFile(outFile, data + "\n", function (writeFileError) {
 			if(err) {
-				return reject(err);
+				return reject(err); 
 			}
 			if(writeFileError) {
 				return reject(writeFileError);
@@ -160,5 +175,12 @@ var writeToFile = function(data, err) {
 }
 
 var exceptionHandler = function (reason) {
-	console.log("Error: Exception Handler Caught: " + reason);
+	if(reason.errCode && reason.errCode === 1) {
+		console.log("(*)(*)(*)Error: Exception Handler Caught: " + reason.message);
+		console.log("PROCESS EXITING...");
+		process.exit(4);
+	}
+	else {
+		console.log("(*)(*)(*)Error: Exception Handler Caught: " + reason);
+	}
 }
