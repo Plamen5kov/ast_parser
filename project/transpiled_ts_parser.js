@@ -25,7 +25,7 @@ var fs = require("fs"),
 
 	appDir = path.dirname(require.main.filename),
 	extendDecoratorName = "JavaProxy", // TODO: think about name
-	outFile = "out/out_parsed_typescript.json", //default out file
+	outFile = "out/out_parsed_typescript.txt", //default out file
 	inputDir = "input_parced_typescript";
 
 if(process.env.AST_PARSER_OUT_FILE) {
