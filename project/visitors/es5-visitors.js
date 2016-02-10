@@ -54,8 +54,7 @@ var es6_visitors = (function () {
 		var callee = path.parent.callee;
 		if(!callee) {
 			throw {
-				// TODO: specify file
-				message: "You need to specify a name of the 'extend'. Example: '...extend(\"a.b.C\", {...overrides...})'), file: " + config.filePath,
+				message: "You need to call 'extend'. Example: '...extend(\"a.b.C\", {...overrides...})'), file: " + config.filePath,
 				errCode: 1
 			}
 		}
@@ -79,20 +78,19 @@ var es6_visitors = (function () {
 		}
 		else {
 			throw {
-				// TODO: specify file
 				message: "The 'extend' you are trying to make needs to have a string as a first parameter. Example: '...extend(\"a.b.C\", {...overrides...})', file: " + config.filePath,
 				errCode: 1
 			}
 		}
 
 		var isCorrectClassName = testJavaProxyName(classNameFromDecorator);
-		if(!isCorrectClassName) {
-			throw {
-				// TODO: specify file
-				message: "The first argument '" + classNameFromDecorator + "' of the 'extend' function is not following the right pattern which is: 'namespace.[(namespace.)]ClassName'. Example: '...extend(\"a.b.ClassName\", {overrides...})', file: " + config.filePath,
-				errCode: 1
-			}
-		}
+		//if we don't throw this exception multiple extends will be allowed in one file (think if this is necessary)
+		// if(!isCorrectClassName) {
+		// 	throw {
+		// 		message: "The first argument '" + classNameFromDecorator + "' of the 'extend' function is not following the right pattern which is: 'namespace.[(namespace.)]ClassName'. Example: '...extend(\"a.b.ClassName\", {overrides...})', file: " + config.filePath,
+		// 		errCode: 1
+		// 	}
+		// }
 
 		var arg1 = path.parent.arguments[1];
 
@@ -104,7 +102,6 @@ var es6_visitors = (function () {
 		}
 		else {
 			throw {
-				// TODO: specify file
 				message: "The extend you are trying to make needs to have an object as a second parameter. Example: '...extend(\"a.b.C\", {...overrides...})', file: " + config.filePath,
 				errCode: 1
 			}
@@ -141,7 +138,7 @@ var es6_visitors = (function () {
 				break;
 			}
 			
-			extClassArr.push(o.property.name) //these are member expressions
+			extClassArr.push(o.property.name)
 			o = o.object;
 		}
 

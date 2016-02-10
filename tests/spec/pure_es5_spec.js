@@ -75,7 +75,7 @@ describe("pure es5", function(){
 
 		var ex = exec("node transpiled_ts_parser.js " + inputDir, function (err, stdout, stderr) {
 			
-			expect(stderr.indexOf("need to specify a name of the 'extend'")).not.toBe(-1);
+			expect(stderr.indexOf("You need to call 'extend'")).not.toBe(-1);
 			expect(err).not.toBe(null)
 			expect(err.code).toBe(4);
 
