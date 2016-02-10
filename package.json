@@ -4,7 +4,7 @@
   "description": "",
   "main": "project/parse.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node node_modules/jasmine-node/lib/jasmine-node/cli.js tests/spec --verbose"
   },
   "author": "",
   "license": "ISC",
@@ -13,5 +13,8 @@
     "babel-types": "^6.4.5",
     "babylon": "^6.4.5",
     "filewalker": "^0.1.2"
+  },
+  "devDependencies": {
+    "jasmine-node": "^1.14.5"
   }
 }
