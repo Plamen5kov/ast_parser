@@ -101,7 +101,11 @@ var readFile = function (filePath, err) {
 			}
 
 			logger.info("+got content of file!");
-			return resolve(data.toString());
+			var fileInfo = {
+				filePath: filePath,
+				data: data.toString()
+			}
+			return resolve(fileInfo);
 		});
 	});
 }
@@ -115,10 +119,11 @@ var astFromFileContent = function (data, err) {
 		}
 		
 		logger.info("+parsing ast from file!");
-		var ast = babelParser.parse(data, {
+		var ast = babelParser.parse(data.data, {
 						plugins: ["decorators"]
 					});
-		return resolve(ast);
+		data.ast = ast;
+		return resolve(data);
 	});
 };
 
@@ -131,12 +136,13 @@ var visitAst = function (data, err) {
 
 		logger.info("+visiting ast with given visitor library!");
 
-		traverse.default(data, {
+		traverse.default(data.ast, {
 			enter(path) {
 
 				var decoratorConfig = {
 					logger: logger,
-					extendDecoratorName: extendDecoratorName
+					extendDecoratorName: extendDecoratorName,
+					filePath: data.filePath
 				};
 				es5_visitors.decoratorVisitor(path, decoratorConfig);				
 			}

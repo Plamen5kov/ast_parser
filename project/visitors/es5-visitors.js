@@ -6,6 +6,9 @@ var es6_visitors = (function () {
 
 
 	function decoratorVisitor(path, config) {
+		if(!config.filePath) {
+			config.filePath = "No file path provided";
+		}
 
 		// anchor is extend
 		if (t.isMemberExpression(path) && path.node.property.name === "extend") {
@@ -29,7 +32,7 @@ var es6_visitors = (function () {
 		}
 
 		var classNameFromDecorator = getDecoratorArgument(path, config, customDecoratorName),
-			extendClass = getArgumentFromNodeAsString(path),
+			extendClass = getArgumentFromNodeAsString(path, config),
 			overriddenMethodNames = getOverriddenMethods(path);
 
 		var lineToWrite = "Java File: " + classNameFromDecorator + " - Extend Class: " + extendClass + " - Overridden Methods: " + overriddenMethodNames;
@@ -52,7 +55,7 @@ var es6_visitors = (function () {
 		if(!callee) {
 			throw {
 				// TODO: specify file
-				message: "You need to specify a name of the 'extend'. Example: '...extend(\"a.b.C\", {...overrides...})')",
+				message: "You need to specify a name of the 'extend'. Example: '...extend(\"a.b.C\", {...overrides...})'), file: " + config.filePath,
 				errCode: 1
 			}
 		}
@@ -77,7 +80,7 @@ var es6_visitors = (function () {
 		else {
 			throw {
 				// TODO: specify file
-				message: "The 'extend' you are trying to make needs to have a string as a first parameter. Example: '...extend(\"a.b.C\", {...overrides...})'",
+				message: "The 'extend' you are trying to make needs to have a string as a first parameter. Example: '...extend(\"a.b.C\", {...overrides...})', file: " + config.filePath,
 				errCode: 1
 			}
 		}
@@ -86,7 +89,7 @@ var es6_visitors = (function () {
 		if(!isCorrectClassName) {
 			throw {
 				// TODO: specify file
-				message: "The first argument '" + classNameFromDecorator + "' of the 'extend' function is not following the right pattern which is: 'namespace.[(namespace.)]ClassName'. Example: '...extend(\"a.b.ClassName\", {overrides...})'",
+				message: "The first argument '" + classNameFromDecorator + "' of the 'extend' function is not following the right pattern which is: 'namespace.[(namespace.)]ClassName'. Example: '...extend(\"a.b.ClassName\", {overrides...})', file: " + config.filePath,
 				errCode: 1
 			}
 		}
@@ -102,7 +105,7 @@ var es6_visitors = (function () {
 		else {
 			throw {
 				// TODO: specify file
-				message: "The extend you are trying to make needs to have an object as a second parameter. Example: '...extend(\"a.b.C\", {...overrides...})'",
+				message: "The extend you are trying to make needs to have an object as a second parameter. Example: '...extend(\"a.b.C\", {...overrides...})', file: " + config.filePath,
 				errCode: 1
 			}
 		}
@@ -114,10 +117,10 @@ var es6_visitors = (function () {
 		linesToWrite.push(lineToWrite)
 	}
 
-	function getArgumentFromNodeAsString(path) {
+	function getArgumentFromNodeAsString(path, config) {
 
 		var extClassArr = [];
-		var extendedClass =  getParrent(path, 8);
+		var extendedClass =  getParrent(path, 8, config);
 
 		if(extendedClass) {
 			if(t.isCallExpression(extendedClass.node)) {
@@ -125,8 +128,8 @@ var es6_visitors = (function () {
 			}
 			else {
 				throw {
-					errCode: 1,
-					message: "Node type is not a call expression."
+					message: "Node type is not a call expression. File" + config.filePath,
+					errCode: 1
 				}
 			}
 		}
@@ -157,21 +160,21 @@ var es6_visitors = (function () {
 				}
 				else {
 					throw {
-						message: "The first argument '" + classNameFromDecorator + "' of the "+customDecoratorName+" decorator is not following the right pattern which is: '[namespace.]ClassName'. Example: '"+customDecoratorName+"(\"a.b.ClassName\", {overrides...})'",
+						message: "The first argument '" + classNameFromDecorator + "' of the "+customDecoratorName+" decorator is not following the right pattern which is: '[namespace.]ClassName'. Example: '"+customDecoratorName+"(\"a.b.ClassName\", {overrides...})', file: " + config.filePath,
 						errCode: 1
 					}
 				}
 			}
 			else {
 				throw {
-					message: "No arguments passed to "+customDecoratorName+" decorator. Example: '"+customDecoratorName+"(\"a.b.ClassName\", {overrides...})'",
+					message: "No arguments passed to "+customDecoratorName+" decorator. Example: '"+customDecoratorName+"(\"a.b.ClassName\", {overrides...})', file: " + config.filePath,
 					errCode: 1
 				}
 			}
 		}
 		else {
 			throw { 
-				message: "Decorator "+customDecoratorName+" must be called with parameters: Example: '"+customDecoratorName+"(\"a.b.ClassName\", {overrides...})'",
+				message: "Decorator "+customDecoratorName+" must be called with parameters: Example: '"+customDecoratorName+"(\"a.b.ClassName\", {overrides...})', file: " + config.filePath,
 				errCode: 1
 			}
 		}
@@ -198,9 +201,12 @@ var es6_visitors = (function () {
 		return methods;
 	}
 
-	function getParrent(node, numberOfParrents) {
+	function getParrent(node, numberOfParrents, config) {
 		if(!node) {
-			throw "No parent found for node";
+			throw {
+				message: "No parent found for node in file: " + config.filePath,
+				errCode: 1
+			}
 		}
 		if(numberOfParrents === 0) {
 			return node;
