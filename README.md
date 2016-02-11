@@ -16,6 +16,10 @@ npm install
 * in Editor, select `Tools/BuildSystem/NodeJs`. You need to have [nodejs](https://nodejs.org/en/) installed. I'm using latest LTS(long term support) currently 4.2.5.
 * `Alt+R` to run nodejs in editor
 
+## How to test
+* `npm install`
+* `npm test`
+
 ## More information:
 * babel: javasript transpiler
 * [babylon](https://github.com/babel/babel/tree/master/packages/babylon): babel javascript parser

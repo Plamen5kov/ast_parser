@@ -1,12 +1,12 @@
 ///////////////// config /////////////////
 
-var disableLogger = false;
+var disableLogger = true;
 if(process.env.AST_PARSER_DISABLE_LOGGING && process.env.AST_PARSER_DISABLE_LOGGING.trim() === "true") {
 	disableLogger = true;
 }
 
 loggingSettings = {
-	"logDirectory" : "logs",
+	"logDirectory" : require("path").dirname(require.main.filename) + "/logs",
 	"strategy" : "console",
 	"APP_NAME" : "ast_parser",
 	"disable": disableLogger
@@ -16,26 +16,37 @@ var fs = require("fs"),
 	babelParser = require("babylon"),
 	traverse = require("babel-traverse"),
 	logger = require('./helpers/logger')(loggingSettings),
-	path = require("path"),	
+	path = require("path"),
 	stringify = require("./helpers/json_extension"),
-	es6_visitors = require("./visitors/es6-visitors"),
+	// es6_visitors = require("./visitors/es6-visitors"),
 	es5_visitors = require("./visitors/es5-visitors"),
 	t = require("babel-types"),
-	filewalker = require('filewalker'), 
+	filewalker = require('filewalker'),
 
+	arguments = process.argv,
 	appDir = path.dirname(require.main.filename),
 	extendDecoratorName = "JavaProxy", // TODO: think about name
-	outFile = "out/extended_classes.txt", //default out file
-	inputDir = "input_javascript",
-	inputFile = path.join(inputDir, "/test_es5-6_syntax.js");
+	outFile = "out/out_parsed_typescript.txt", //default out file
+	inputDir = "input_parced_typescript";
 
+//env variables
 if(process.env.AST_PARSER_OUT_FILE) {
 	outFile = process.env.AST_PARSER_OUT_FILE.trim();
 }
-
 if(process.env.AST_PARSER_INPUT_DIR) {
 	inputDir = process.env.AST_PARSER_INPUT_DIR.trim();
 }
+
+//console variables have priority
+if(arguments && arguments.length >= 3) {
+	inputDir = arguments[2]
+	console.log("inputDir: " + inputDir)
+}
+if(arguments && arguments.length >= 4) {
+	outFile = arguments[3]
+	console.log("outFile: " + outFile)
+}
+
 
 /////////////// init ////////////////
 function cleanOutFile(filePath) {
@@ -61,7 +72,6 @@ function ensureDirectories(filePath) {
 	fs.mkdirSync(parentDir);
 	return true;
 }
-
 createFile(outFile)
 
 /////////////// execute ////////////////
@@ -77,6 +87,7 @@ var traverseFilesDir = function(filesDir) {
 				var currentFileName = path.join(filesDir, file);
 				readFile(currentFileName)
 					.then(astFromFileContent)
+					// .then(writeToFile)
 					.then(visitAst)
 					.then(writeToFile)
 					.catch(exceptionHandler)
@@ -101,7 +112,11 @@ var readFile = function (filePath, err) {
 			}
 
 			logger.info("+got content of file!");
-			return resolve(data.toString());
+			var fileInfo = {
+				filePath: filePath,
+				data: data.toString()
+			}
+			return resolve(fileInfo);
 		});
 	});
 }
@@ -115,11 +130,11 @@ var astFromFileContent = function (data, err) {
 		}
 		
 		logger.info("+parsing ast from file!");
-		var ast = babelParser.parse(data, {
+		var ast = babelParser.parse(data.data, {
 						plugins: ["decorators"]
 					});
-		// var ast = babelParser.parse("var = 4"); //try if error handling works ok
-		return resolve(ast);
+		data.ast = ast;
+		return resolve(data);
 	});
 };
 
@@ -132,40 +147,20 @@ var visitAst = function (data, err) {
 
 		logger.info("+visiting ast with given visitor library!");
 
-		traverse.default(data, {
+		traverse.default(data.ast, {
 			enter(path) {
-				var decoratorConfig = {
-					// logger: logger,
-					extendDecoratorName: extendDecoratorName
-				};
 
-				es6_visitors.decoratorVisitor(path, decoratorConfig);
-				es5_visitors.decoratorVisitor(path, decoratorConfig);
+				var decoratorConfig = {
+					logger: logger,
+					extendDecoratorName: extendDecoratorName,
+					filePath: data.filePath
+				};
+				es5_visitors.decoratorVisitor(path, decoratorConfig);				
 			}
 		})
 
-		try {
-			logger.info("+trying to parse ES6 syntax!");
-			var decoratorClassName = es6_visitors.decoratorVisitor.getDecoratorClassName();
-			var extendedClassNames = es6_visitors.decoratorVisitor.getExtendClass();
-			var extendedMethodNames = es6_visitors.decoratorVisitor.getMethodNames();
-			var lineToWrite = "Java File: " + decoratorClassName + " - Extend Class: " + extendedClassNames + " - Overridden Methods: " + extendedMethodNames;
-			es6_visitors.decoratorVisitor.clearData();
-			logger.info(lineToWrite);
-			return resolve(lineToWrite);
-		}
-		catch (e) {
-			logger.info("==Error: " + e);
-			logger.info("+trying to parse ES5 syntax!");
-			var decoratorClassName = es5_visitors.decoratorVisitor.getDecoratorClassName(); // my.custom.Class
-			var extendedClassNames = es5_visitors.decoratorVisitor.getExtendClass(); // android.widget.Button
-			var extendedMethodNames = es5_visitors.decoratorVisitor.getMethodNames();  // onClick,onClick1
-			var lineToWrite = "Java File: " + decoratorClassName + " - Extend Class: " + extendedClassNames + " - Overridden Methods: " + extendedMethodNames;
-			logger.info(lineToWrite);
-			es5_visitors.decoratorVisitor.clearData();
-			return resolve(lineToWrite);
-		}
-		return resolve(data);
+		var linesToWrite = es5_visitors.decoratorVisitor.getExtendInfo().join("\n")
+		return resolve(linesToWrite)
 	});
 }
 
@@ -173,7 +168,7 @@ var writeToFile = function(data, err) {
 
 	return new Promise (function (resolve, reject) {
 
-		fs.appendFile(outFile, data + '\n', function (writeFileError) {
+		fs.appendFile(outFile, data, function (writeFileError) {
 			if(err) {
 				logger.warn("Error from writeToFile: " + err);
 				return reject(err);
@@ -193,6 +188,7 @@ var exceptionHandler = function (reason) {
 	if(reason.errCode && reason.errCode === 1) {
 		logger.error("(*)(*)(*)Error: Exception Handler Caught: " + reason.message);
 		logger.error("PROCESS EXITING...");
+		process.stderr.write(reason.message);
 		process.exit(4);
 	}
 	else {
