@@ -108,10 +108,13 @@ var es6_visitors = (function () {
 		}
 
 		var lineToWrite = "Java File: " + classNameFromDecorator + " - Extend Class: " + extendClass.reverse().join(".") + " - Overridden Methods: " + overriddenMethodNames;
-		if(config.logger) {
-			config.logger.info(lineToWrite)
+		if(isCorrectClassName) {
+			if(config.logger) {
+				config.logger.info(lineToWrite)
+			}
+			
+			linesToWrite.push(lineToWrite)
 		}
-		linesToWrite.push(lineToWrite)
 	}
 
 	function getArgumentFromNodeAsString(path, config) {

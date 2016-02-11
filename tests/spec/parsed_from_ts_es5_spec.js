@@ -78,5 +78,22 @@ describe("ES5 generated from parsing typescript", function(){
 		})
 	})
 
-	// not called at all -> fallback?
+	it("when file has multiple extended classes should be parsed without errors",function(done){
+
+		var testFolder = "ts_multiple_extends_in_a_file";
+			inputDir = prefix + "/"+testFolder+"/input",
+			actualFile = prefix + "/"+testFolder+"/actualOutput/parsed.txt",
+			expectedFile = prefix + "/"+testFolder+"/expectedOutput/parsed.txt"
+
+		exec("node transpiled_ts_parser.js " + inputDir + " " + actualFile, function (err) {
+
+			var expectedContent = fs.readFileSync(expectedFile, "utf-8");
+			var actualContent = fs.readFileSync(actualFile, "utf-8");
+
+			expect(err).toBe(null)
+			expect(expectedContent).toBe(actualContent);
+
+			done();
+		})
+	})
 });

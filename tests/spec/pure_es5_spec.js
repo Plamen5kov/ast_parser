@@ -74,10 +74,29 @@ describe("pure es5", function(){
 			inputDir = prefix + "/"+testFolder+"/input"
 
 		var ex = exec("node transpiled_ts_parser.js " + inputDir, function (err, stdout, stderr) {
-			
+
 			expect(stderr.indexOf("You need to call 'extend'")).not.toBe(-1);
 			expect(err).not.toBe(null)
 			expect(err.code).toBe(4);
+
+			done();
+		})
+	})
+
+	it("when file has multiple extended classes should be parsed without errors",function(done){
+
+		var testFolder = "es5_multiple_extends_in_a_file";
+			inputDir = prefix + "/"+testFolder+"/input",
+			actualFile = prefix + "/"+testFolder+"/actualOutput/parsed.txt",
+			expectedFile = prefix + "/"+testFolder+"/expectedOutput/parsed.txt"
+
+		exec("node transpiled_ts_parser.js " + inputDir + " " + actualFile, function (err) {
+
+			var expectedContent = fs.readFileSync(expectedFile, "utf-8");
+			var actualContent = fs.readFileSync(actualFile, "utf-8");
+
+			expect(err).toBe(null)
+			expect(expectedContent).toBe(actualContent);
 
 			done();
 		})
