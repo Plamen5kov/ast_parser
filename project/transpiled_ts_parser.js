@@ -1,6 +1,6 @@
 ///////////////// config /////////////////
 
-var disableLogger = true;
+var disableLogger = false;
 if(process.env.AST_PARSER_DISABLE_LOGGING && process.env.AST_PARSER_DISABLE_LOGGING.trim() === "true") {
 	disableLogger = true;
 }
@@ -18,7 +18,7 @@ var fs = require("fs"),
 	logger = require('./helpers/logger')(loggingSettings),
 	path = require("path"),
 	stringify = require("./helpers/json_extension"),
-	// es6_visitors = require("./visitors/es6-visitors"),
+	// es5_visitors = require("./visitors/es6-visitors"),
 	es5_visitors = require("./visitors/es5-visitors"),
 	t = require("babel-types"),
 	filewalker = require('filewalker'),
@@ -47,6 +47,8 @@ if(arguments && arguments.length >= 4) {
 	console.log("outFile: " + outFile)
 }
 
+
+var interfaceNames = ["android.app.Application.ActivityLifecycleCallbacks"];
 
 /////////////// init ////////////////
 function cleanOutFile(filePath) {
@@ -85,11 +87,12 @@ var traverseFilesDir = function(filesDir) {
 		.on("file", function (file, info) {
 			if(file.substring(file.length - 3, file.length) === '.js') {
 				var currentFileName = path.join(filesDir, file);
+
 				readFile(currentFileName)
 					.then(astFromFileContent)
-					// .then(writeToFile)
-					.then(visitAst)
 					.then(writeToFile)
+					.then(visitAst)
+					// .then(writeToFile)
 					.catch(exceptionHandler)
 			}
 		})
@@ -153,14 +156,26 @@ var visitAst = function (data, err) {
 				var decoratorConfig = {
 					logger: logger,
 					extendDecoratorName: extendDecoratorName,
-					filePath: data.filePath
+					filePath: data.filePath,
+					interfaceNames: interfaceNames
 				};
-				es5_visitors.decoratorVisitor(path, decoratorConfig);				
+				es5_visitors.customExtendVisitor(path, decoratorConfig);
+				// es5_visitors.interfaceVisitor(path, interfaceNames, decoratorConfig);
 			}
 		})
 
-		var linesToWrite = es5_visitors.decoratorVisitor.getExtendInfo().join("\n")
-		return resolve(linesToWrite)
+		var customExtendsArr = es5_visitors.customExtendVisitor.getProxyExtendInfo().join("\n")
+		var normalExtendsArr = es5_visitors.customExtendVisitor.getCommonExtendInfo().join("\n")
+		var interfacesArr = es5_visitors.customExtendVisitor.getInterfaceInfo().join("\n")
+
+		console.log("customExtendsArr:")
+		console.log(customExtendsArr)
+		console.log("normalExtendsArr:")
+		console.log(normalExtendsArr)
+		console.log("interfcace:")
+		console.log(interfacesArr)
+		// return resolve(interfacesArr)
+		return resolve(data)
 	});
 }
 
@@ -168,7 +183,8 @@ var writeToFile = function(data, err) {
 
 	return new Promise (function (resolve, reject) {
 
-		fs.appendFile(outFile, data, function (writeFileError) {
+		// fs.appendFile(outFile, stringify(data), function (writeFileError) {
+		fs.appendFile(outFile, JSON.stringify(data, null, 4), function (writeFileError) {
 			if(err) {
 				logger.warn("Error from writeToFile: " + err);
 				return reject(err);
@@ -180,6 +196,7 @@ var writeToFile = function(data, err) {
 
 			logger.info("+appended '" + data + "' to file: " + outFile);
 			return resolve(data);
+			
 		});
 	});
 }
